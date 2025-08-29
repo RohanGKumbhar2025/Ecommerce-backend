@@ -106,7 +106,7 @@ public class SecurityConfig {
                 "http://localhost:3000",               // React dev
                 "http://localhost:5173",               // Vite dev
                 "http://127.0.0.1:5173",               // Alternative local
-                "https://nexoshoppingg-*.vercel.app/products"        // Vercel preview
+                "https://nexoshoppingg-*.vercel.app"        // Vercel preview
         ));
 
         // Allowed methods
