@@ -1,10 +1,8 @@
-// productcatalog/src/main/java/com/ecom/productcatalog/controller/AdminController.java
-
 package com.ecom.productcatalog.controller;
 
 import com.ecom.productcatalog.dto.OrderResponseDTO;
 import com.ecom.productcatalog.dto.ProductRequest;
-import com.ecom.productcatalog.dto.ProductResponseDTO; // Ensure this is imported
+import com.ecom.productcatalog.dto.ProductResponseDTO;
 import com.ecom.productcatalog.model.Order;
 import com.ecom.productcatalog.model.Product;
 import com.ecom.productcatalog.service.OrderService;
@@ -20,7 +18,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/admin")
-@PreAuthorize("hasAuthority('ROLE_ADMIN')")
+// Option 1: Remove class-level authorization and add method-level authorization
 public class AdminController {
 
     @Autowired
@@ -30,6 +28,7 @@ public class AdminController {
     private OrderService orderService;
 
     @GetMapping("/products")
+    @PreAuthorize("hasRole('ADMIN')") // Use hasRole instead of hasAuthority
     public ResponseEntity<List<ProductResponseDTO>> getAllProducts() {
         List<ProductResponseDTO> products = productService.getAllProducts().stream()
                 .map(ProductResponseDTO::new)
@@ -38,6 +37,7 @@ public class AdminController {
     }
 
     @GetMapping("/orders")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<OrderResponseDTO>> getAllOrders() {
         List<OrderResponseDTO> orders = orderService.getAllOrders().stream()
                 .map(OrderResponseDTO::new)
@@ -46,22 +46,21 @@ public class AdminController {
     }
 
     @PostMapping("/products")
-    // ✅ FINAL FIX #1: Change the return type to the DTO
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ProductResponseDTO> addProduct(@Valid @RequestBody ProductRequest productRequest) {
         Product newProduct = productService.addProduct(productRequest);
-        // Convert the saved entity to a DTO before sending the response
         return ResponseEntity.ok(new ProductResponseDTO(newProduct));
     }
 
     @PutMapping("/products/{id}")
-    // ✅ FINAL FIX #2: Change the return type to the DTO
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ProductResponseDTO> updateProduct(@PathVariable Long id, @Valid @RequestBody ProductRequest productRequest) {
         Product updatedProduct = productService.updateProduct(id, productRequest);
-        // Convert the saved entity to a DTO before sending the response
         return ResponseEntity.ok(new ProductResponseDTO(updatedProduct));
     }
 
     @DeleteMapping("/products/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> deleteProduct(@PathVariable Long id) {
         productService.deleteProduct(id);
         return ResponseEntity.ok("Product deleted successfully");
