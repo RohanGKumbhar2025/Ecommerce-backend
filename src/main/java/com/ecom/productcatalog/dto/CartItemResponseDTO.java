@@ -11,8 +11,12 @@ public class CartItemResponseDTO {
     private Double price;
     private Integer quantity;
     private Boolean isWishlisted;
+    private Boolean inStock; // ✅ ADDED
 
-    // This constructor converts the complex CartItem entity into a simple DTO
+    /**
+     * This constructor is updated to include the product's real-time stock status.
+     * This is the most efficient fix for the wishlist bug.
+     */
     public CartItemResponseDTO(CartItem cartItem) {
         this.productId = cartItem.getProduct().getId();
         this.name = cartItem.getProduct().getName();
@@ -20,5 +24,6 @@ public class CartItemResponseDTO {
         this.price = cartItem.getProduct().getPrice();
         this.quantity = cartItem.getQuantity();
         this.isWishlisted = cartItem.getIsWishlisted();
+        this.inStock = cartItem.getProduct().getInStock(); // ✅ ADDED
     }
 }
