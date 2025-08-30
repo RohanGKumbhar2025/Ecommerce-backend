@@ -13,10 +13,6 @@ public class CartItemResponseDTO {
     private Boolean isWishlisted;
     private Boolean inStock; // ✅ ADDED
 
-    /**
-     * This constructor is updated to include the product's real-time stock status.
-     * This is the most efficient fix for the wishlist bug.
-     */
     public CartItemResponseDTO(CartItem cartItem) {
         this.productId = cartItem.getProduct().getId();
         this.name = cartItem.getProduct().getName();
