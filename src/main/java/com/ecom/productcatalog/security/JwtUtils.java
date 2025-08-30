@@ -1,4 +1,4 @@
-// productcatalog/src/main/java/com/ecom/productcatalog/security/JwtUtils.java
+package com.ecom.productcatalog.security;// productcatalog/src/main/java/com/ecom/productcatalog/security/JwtUtils.java
 
 import com.ecom.productcatalog.security.UserPrincipal;
 import io.jsonwebtoken.Jwts;
