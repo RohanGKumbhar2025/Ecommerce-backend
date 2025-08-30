@@ -8,7 +8,8 @@ import org.hibernate.annotations.Where;
 @Entity
 // ✅ Both the table name and the index are correctly defined here
 @Table(name = "product", indexes = {
-        @Index(name = "idx_product_category_id", columnList = "category_id")
+        @Index(name = "idx_product_category_id", columnList = "category_id"),
+        @Index(name = "idx_product_rating", columnList = "rating")
 })
 @Data
 @SQLDelete(sql = "UPDATE product SET deleted = true WHERE id = ?")
