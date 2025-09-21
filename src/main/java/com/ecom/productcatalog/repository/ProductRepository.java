@@ -14,20 +14,20 @@ import java.util.List;
 public interface ProductRepository extends JpaRepository<Product, Long> {
     List<Product> findByCategoryId(Long categoryId);
 
-    // ✅ OPTIMIZED: Added "JOIN FETCH p.category" to solve the N+1 query problem.
-    // This fetches all necessary category data in a single database query.
+    // ✅ FIXED: Changed lower(p.name) to lower(CAST(p.name AS string)) to resolve the bytea error.
+    // This tells the database to treat the 'name' column as text before the search.
     @Query(value = "SELECT p FROM Product p JOIN FETCH p.category WHERE " +
             "(:categoryId IS NULL OR p.category.id = :categoryId) AND " +
             "(:minPrice IS NULL OR p.price >= :minPrice) AND " +
             "(:maxPrice IS NULL OR p.price <= :maxPrice) AND " +
-            "(:searchTerm IS NULL OR lower(p.name) LIKE lower(concat('%', :searchTerm, '%'))) AND " +
+            "(:searchTerm IS NULL OR lower(CAST(p.name AS string)) LIKE lower(concat('%', :searchTerm, '%'))) AND " +
             "(:isNew IS NULL OR p.isNew = :isNew) AND " +
             "(:onSale IS NULL OR p.onSale = :onSale)",
             countQuery = "SELECT count(p) FROM Product p WHERE " + // Separate count query for pagination
                     "(:categoryId IS NULL OR p.category.id = :categoryId) AND " +
                     "(:minPrice IS NULL OR p.price >= :minPrice) AND " +
                     "(:maxPrice IS NULL OR p.price <= :maxPrice) AND " +
-                    "(:searchTerm IS NULL OR lower(p.name) LIKE lower(concat('%', :searchTerm, '%'))) AND " +
+                    "(:searchTerm IS NULL OR lower(CAST(p.name AS string)) LIKE lower(concat('%', :searchTerm, '%'))) AND " +
                     "(:isNew IS NULL OR p.isNew = :isNew) AND " +
                     "(:onSale IS NULL OR p.onSale = :onSale)")
     Page<Product> findWithFilters(
@@ -40,3 +40,4 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
             Pageable pageable
     );
 }
+
