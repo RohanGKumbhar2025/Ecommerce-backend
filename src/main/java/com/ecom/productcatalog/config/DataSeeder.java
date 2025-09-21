@@ -5,11 +5,15 @@ import com.ecom.productcatalog.model.Product;
 import com.ecom.productcatalog.repository.CategoryRepository;
 import com.ecom.productcatalog.repository.ProductRepository;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
 
 //@Component
+
+@Component
+@Profile("dev")
 public class DataSeeder implements CommandLineRunner {
 
     private final ProductRepository productRepository;

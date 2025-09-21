@@ -6,13 +6,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
-
 import java.util.HashSet;
 import java.util.Set;
 
 /**
- * Initializes a default admin user on application startup if one does not already exist.
- * This is useful for ensuring the application has an administrator from the beginning.
+ * Initializes a default admin user from environment variables on application startup
+ * if one does not already exist. This is the secure way to provision an initial admin account.
  */
 @Component
 public class AdminUserInitializer implements CommandLineRunner {
@@ -36,12 +35,12 @@ public class AdminUserInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        // Check if an admin user with this email already exists to prevent duplicates.
-        if (!userRepository.existsByEmail(adminEmail)) {
+        // This check prevents creating duplicate admins on each restart.
+        if (adminEmail != null && !adminEmail.isEmpty() && !userRepository.existsByEmail(adminEmail)) {
             User adminUser = new User();
             adminUser.setName(adminName);
             adminUser.setEmail(adminEmail);
-            adminUser.setPassword(passwordEncoder.encode(adminPassword)); // Set a default password
+            adminUser.setPassword(passwordEncoder.encode(adminPassword));
 
             // Assign both ROLE_USER and ROLE_ADMIN for full access.
             Set<String> roles = new HashSet<>();

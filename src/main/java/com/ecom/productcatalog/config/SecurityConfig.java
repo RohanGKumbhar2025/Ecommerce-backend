@@ -32,50 +32,26 @@ public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
 
-    @Value("${FRONTEND_URL:http://localhost:5173}")
+    @Value("${FRONTEND_URL}")
     private String frontendUrl;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                // CORS
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-
-                // Disable CSRF for JWT
                 .csrf(AbstractHttpConfigurer::disable)
-
-                // Stateless session
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-
-                // Security headers
                 .headers(headers -> headers
-                        .frameOptions(frame -> frame.deny())
-                        .contentTypeOptions(withDefaults -> {})
-                        .httpStrictTransportSecurity(hsts -> hsts
-                                .maxAgeInSeconds(31536000)
-                                .includeSubDomains(true)
-                        )
+                        .frameOptions(frame -> frame.deny()) // Prevent clickjacking
+                        .httpStrictTransportSecurity(hsts -> hsts.includeSubDomains(true).maxAgeInSeconds(31536000)) // Enforce HTTPS
                 )
-
-                // Endpoint security
                 .authorizeHttpRequests(auth -> auth
-                        // Public auth endpoints
                         .requestMatchers("/api/auth/**").permitAll()
-
-                        // Public product browsing
                         .requestMatchers(HttpMethod.GET, "/api/products/**", "/api/categories/**").permitAll()
-
-                        // Health & info actuator endpoints (safe ones)
-                        .requestMatchers("/actuator/health", "/actuator/info").permitAll()
-
-                        // Allow preflight requests (important for CORS)
+                        .requestMatchers("/actuator/health", "/actuator/info").permitAll() // For health checks
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-
-                        // Everything else requires authentication
                         .anyRequest().authenticated()
                 )
-
-                // Exception handling
                 .exceptionHandling(exceptions -> exceptions
                         .authenticationEntryPoint((request, response, authException) -> {
                             response.setStatus(401);
@@ -89,7 +65,6 @@ public class SecurityConfig {
                         })
                 );
 
-        // JWT filter
         http.addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
@@ -98,36 +73,11 @@ public class SecurityConfig {
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-
-        // Allowed origins with patterns (wildcards supported)
-        configuration.setAllowedOriginPatterns(Arrays.asList(
-                frontendUrl,                           // From application properties
-                "https://nexoshoppingg.vercel.app",         // Prod
-                "http://localhost:3000",               // React dev
-                "http://localhost:5173",               // Vite dev
-                "http://127.0.0.1:5173",               // Alternative local
-                "https://nexoshoppingg-*.vercel.app"        // Vercel preview
-        ));
-
-        // Allowed methods
-        configuration.setAllowedMethods(Arrays.asList(
-                "GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"
-        ));
-
-        // Allow all headers
-        configuration.setAllowedHeaders(List.of("*"));
-
-        // Enable credentials
+        // ✅ Only allow your production frontend URL.
+        configuration.setAllowedOrigins(List.of(frontendUrl));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
+        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
         configuration.setAllowCredentials(true);
-
-        // Exposed headers for frontend
-        configuration.setExposedHeaders(Arrays.asList(
-                "Authorization", "Content-Type", "X-Requested-With"
-        ));
-
-        // Cache preflight results
-        configuration.setMaxAge(3600L);
-
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
@@ -135,7 +85,7 @@ public class SecurityConfig {
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder(12); // Configurable strength
+        return new BCryptPasswordEncoder(12);
     }
 
     @Bean

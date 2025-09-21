@@ -30,12 +30,15 @@ public class ProductService {
         this.cartItemRepository = cartItemRepository;
     }
 
-    // This is the ONLY getAllProducts method. The old one has been removed.
     public Page<Product> getAllProducts(Long categoryId, Double minPrice, Double maxPrice, String searchTerm, Boolean isNew, Boolean onSale, Pageable pageable) {
         return productRepository.findWithFilters(categoryId, minPrice, maxPrice, searchTerm, isNew, onSale, pageable);
     }
 
-    // ... (rest of the file is unchanged)
+    // ✅ ADDED: Service method for the admin controller.
+    public Page<Product> getAllProductsForAdmin(Pageable pageable) {
+        return productRepository.findAllForAdmin(pageable);
+    }
+
     public Optional<Product> getProductById(Long id) {
         return productRepository.findById(id);
     }

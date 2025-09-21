@@ -1,10 +1,13 @@
 package com.ecom.productcatalog.controller;
 
 import com.ecom.productcatalog.dto.*;
+import com.ecom.productcatalog.exception.EmailAlreadyExistsException;
+import com.ecom.productcatalog.exception.PasswordMismatchException;
 import com.ecom.productcatalog.model.User;
 import com.ecom.productcatalog.repository.UserRepository;
 import com.ecom.productcatalog.security.JwtUtils;
 import com.ecom.productcatalog.security.UserPrincipal;
+import jakarta.validation.Valid;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -12,7 +15,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
-import jakarta.validation.Valid;
+
 import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -45,23 +48,22 @@ public class AuthController {
 
         UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
 
-        // ✅ FIX: This block gets the user's roles and adds them to the response.
         List<String> roles = userPrincipal.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.toList());
 
-        // The 'roles' list is now passed into the response object.
         return new JwtResponse(jwt, userPrincipal.getId(), userPrincipal.getUsername(), userPrincipal.getName(), roles);
     }
 
+    // ✅ UPDATED: Now throws specific, handled exceptions.
     @PostMapping("/signup")
     public void signup(@Valid @RequestBody SignupRequest signupRequest) {
         if (userRepository.existsByEmail(signupRequest.getEmail())) {
-            throw new RuntimeException("Email is already taken!");
+            throw new EmailAlreadyExistsException("Email is already taken!");
         }
 
         if (!signupRequest.getPassword().equals(signupRequest.getConfirmPassword())) {
-            throw new RuntimeException("Passwords don't match!");
+            throw new PasswordMismatchException("Passwords don't match!");
         }
 
         User user = new User();
