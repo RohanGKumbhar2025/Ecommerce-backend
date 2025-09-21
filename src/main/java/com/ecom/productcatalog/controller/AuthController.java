@@ -55,9 +55,9 @@ public class AuthController {
         return new JwtResponse(jwt, userPrincipal.getId(), userPrincipal.getUsername(), userPrincipal.getName(), roles);
     }
 
-    // ✅ UPDATED: Now throws specific, handled exceptions.
+    // ✅ UPDATED: Now returns a JwtResponse upon successful signup
     @PostMapping("/signup")
-    public void signup(@Valid @RequestBody SignupRequest signupRequest) {
+    public JwtResponse signup(@Valid @RequestBody SignupRequest signupRequest) {
         if (userRepository.existsByEmail(signupRequest.getEmail())) {
             throw new EmailAlreadyExistsException("Email is already taken!");
         }
@@ -66,13 +66,27 @@ public class AuthController {
             throw new PasswordMismatchException("Passwords don't match!");
         }
 
+        // Create and save the new user
         User user = new User();
         user.setName(signupRequest.getName());
         user.setEmail(signupRequest.getEmail());
         user.setPassword(passwordEncoder.encode(signupRequest.getPassword()));
         user.setRoles(new HashSet<>());
         user.getRoles().add("ROLE_USER");
-
         userRepository.save(user);
+
+        // Authenticate the user immediately after signup
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(signupRequest.getEmail(), signupRequest.getPassword()));
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        // Generate and return the JWT token
+        String jwt = jwtUtils.generateJwtToken(authentication);
+        UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
+        List<String> roles = userPrincipal.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.toList());
+
+        return new JwtResponse(jwt, userPrincipal.getId(), userPrincipal.getUsername(), userPrincipal.getName(), roles);
     }
 }
