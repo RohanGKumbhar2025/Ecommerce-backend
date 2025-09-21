@@ -14,16 +14,16 @@ import java.util.List;
 public interface ProductRepository extends JpaRepository<Product, Long> {
     List<Product> findByCategoryId(Long categoryId);
 
-    // ✅ FIX: Removed the non-standard CAST to prevent the 500 Internal Server Error.
-    // This query is now more robust and compatible with the production database.
-    @Query(value = "SELECT p FROM Product p JOIN FETCH p.category WHERE " +
+    // ✅ FIX: This query is simplified to prevent the 500 Internal Server Error on Render.
+    // It removes 'JOIN FETCH' which can conflict with pagination and complex WHERE clauses.
+    @Query(value = "SELECT p FROM Product p WHERE " +
             "(:categoryId IS NULL OR p.category.id = :categoryId) AND " +
             "(:minPrice IS NULL OR p.price >= :minPrice) AND " +
             "(:maxPrice IS NULL OR p.price <= :maxPrice) AND " +
             "(:searchTerm IS NULL OR lower(p.name) LIKE lower(concat('%', :searchTerm, '%'))) AND " +
             "(:isNew IS NULL OR p.isNew = :isNew) AND " +
             "(:onSale IS NULL OR p.onSale = :onSale)",
-            countQuery = "SELECT count(p) FROM Product p WHERE " + // Separate count query for pagination
+            countQuery = "SELECT count(p) FROM Product p WHERE " +
                     "(:categoryId IS NULL OR p.category.id = :categoryId) AND " +
                     "(:minPrice IS NULL OR p.price >= :minPrice) AND " +
                     "(:maxPrice IS NULL OR p.price <= :maxPrice) AND " +
