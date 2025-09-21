@@ -1,8 +1,11 @@
+// rohangkumbhar2025/ecommerce-backend/.../repository/ProductRepository.java
+
 package com.ecom.productcatalog.repository;
 
 import com.ecom.productcatalog.model.Product;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph; // Import this
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -14,7 +17,8 @@ import java.util.List;
 public interface ProductRepository extends JpaRepository<Product, Long> {
     List<Product> findByCategoryId(Long categoryId);
 
-    // ✅ FIX: This query is now robust and compatible with production databases.
+    // ✅ FIX: Use @EntityGraph to solve the LazyInitializationException without breaking pagination.
+    @EntityGraph(attributePaths = { "category" })
     @Query(value = "SELECT p FROM Product p WHERE " +
             "(:categoryId IS NULL OR p.category.id = :categoryId) AND " +
             "(:minPrice IS NULL OR p.price >= :minPrice) AND " +
@@ -32,8 +36,8 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
             Pageable pageable
     );
 
-    // ✅ ADDED BACK: A simple query for the admin panel that is compatible with pagination.
-    // This resolves the build error.
+    // ✅ FIX: Also apply the EntityGraph to the admin query for consistency and to prevent future issues.
+    @EntityGraph(attributePaths = { "category" })
     @Query("SELECT p FROM Product p")
     Page<Product> findAllForAdmin(Pageable pageable);
 }
