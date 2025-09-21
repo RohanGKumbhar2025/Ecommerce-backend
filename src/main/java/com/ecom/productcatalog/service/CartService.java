@@ -31,8 +31,14 @@ public class CartService {
         return cartItemRepository.findByUserIdAndIsWishlisted(userId, false);
     }
 
+    // This method remains for compatibility but is no longer the primary way to get wishlist products
     public List<CartItem> getWishlist(Long userId) {
         return cartItemRepository.findByUserIdAndIsWishlisted(userId, true);
+    }
+
+    // ✅ ADD THIS NEW, MORE EFFICIENT METHOD
+    public List<Product> getWishlistProducts(Long userId) {
+        return cartItemRepository.findWishlistedProductsByUserId(userId);
     }
 
     @Transactional

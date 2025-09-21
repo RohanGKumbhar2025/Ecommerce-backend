@@ -1,7 +1,8 @@
 package com.ecom.productcatalog.controller;
 
 import com.ecom.productcatalog.dto.CartItemRequest;
-import com.ecom.productcatalog.dto.CartItemResponseDTO; // ✅ Import the new DTO
+import com.ecom.productcatalog.dto.CartItemResponseDTO;
+import com.ecom.productcatalog.dto.ProductResponseDTO; // ✅ Import Product DTO
 import com.ecom.productcatalog.model.CartItem;
 import com.ecom.productcatalog.security.UserPrincipal;
 import com.ecom.productcatalog.service.CartService;
@@ -23,23 +24,21 @@ public class CartController {
     }
 
     @GetMapping
-    // ✅ FIX: Return a List of DTOs instead of entities
     public List<CartItemResponseDTO> getCart(@AuthenticationPrincipal UserPrincipal userPrincipal) {
         return cartService.getCart(userPrincipal.getId()).stream()
                 .map(CartItemResponseDTO::new)
                 .collect(Collectors.toList());
     }
 
+    // ✅ MODIFIED: This endpoint is now highly efficient
     @GetMapping("/wishlist")
-    // ✅ FIX: Return a List of DTOs instead of entities
-    public List<CartItemResponseDTO> getWishlist(@AuthenticationPrincipal UserPrincipal userPrincipal) {
-        return cartService.getWishlist(userPrincipal.getId()).stream()
-                .map(CartItemResponseDTO::new)
+    public List<ProductResponseDTO> getWishlist(@AuthenticationPrincipal UserPrincipal userPrincipal) {
+        return cartService.getWishlistProducts(userPrincipal.getId()).stream()
+                .map(ProductResponseDTO::new)
                 .collect(Collectors.toList());
     }
 
     @PostMapping
-    // ✅ FIX: Return the DTO after adding/updating an item
     public CartItemResponseDTO addToCartOrWishlist(@AuthenticationPrincipal UserPrincipal userPrincipal, @RequestBody CartItemRequest cartItemRequest) {
         CartItem updatedItem = cartService.addToCartOrWishlist(userPrincipal.getId(), cartItemRequest);
         return new CartItemResponseDTO(updatedItem);

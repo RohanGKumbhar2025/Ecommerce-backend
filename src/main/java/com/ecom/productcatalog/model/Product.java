@@ -6,10 +6,11 @@ import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.Where;
 
 @Entity
-// ✅ Both the table name and the index are correctly defined here
+// ✅ ADDED: Index on the 'name' column for faster searching
 @Table(name = "product", indexes = {
         @Index(name = "idx_product_category_id", columnList = "category_id"),
-        @Index(name = "idx_product_rating", columnList = "rating")
+        @Index(name = "idx_product_rating", columnList = "rating"),
+        @Index(name = "idx_product_name", columnList = "name")
 })
 @Data
 @SQLDelete(sql = "UPDATE product SET deleted = true WHERE id = ?")
@@ -30,7 +31,7 @@ public class Product {
     private Boolean isNew;
     private Boolean onSale;
 
-    @ManyToOne(fetch = FetchType.LAZY) // Using LAZY fetch is often better for performance
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id", nullable = false)
     private Category category;
 

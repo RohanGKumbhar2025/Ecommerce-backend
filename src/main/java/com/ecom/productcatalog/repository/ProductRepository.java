@@ -1,5 +1,3 @@
-// productcatalog/src/main/java/com/ecom/productcatalog/repository/ProductRepository.java
-
 package com.ecom.productcatalog.repository;
 
 import com.ecom.productcatalog.model.Product;
@@ -16,14 +14,22 @@ import java.util.List;
 public interface ProductRepository extends JpaRepository<Product, Long> {
     List<Product> findByCategoryId(Long categoryId);
 
-    // ✅ THE DEFINITIVE FIX: Add isNew and onSale to the query
-    @Query("SELECT p FROM Product p WHERE " +
+    // ✅ OPTIMIZED: Added "JOIN FETCH p.category" to solve the N+1 query problem.
+    // This fetches all necessary category data in a single database query.
+    @Query(value = "SELECT p FROM Product p JOIN FETCH p.category WHERE " +
             "(:categoryId IS NULL OR p.category.id = :categoryId) AND " +
             "(:minPrice IS NULL OR p.price >= :minPrice) AND " +
             "(:maxPrice IS NULL OR p.price <= :maxPrice) AND " +
-            "(:searchTerm IS NULL OR p.name LIKE %:searchTerm%) AND " +
+            "(:searchTerm IS NULL OR lower(p.name) LIKE lower(concat('%', :searchTerm, '%'))) AND " +
             "(:isNew IS NULL OR p.isNew = :isNew) AND " +
-            "(:onSale IS NULL OR p.onSale = :onSale)")
+            "(:onSale IS NULL OR p.onSale = :onSale)",
+            countQuery = "SELECT count(p) FROM Product p WHERE " + // Separate count query for pagination
+                    "(:categoryId IS NULL OR p.category.id = :categoryId) AND " +
+                    "(:minPrice IS NULL OR p.price >= :minPrice) AND " +
+                    "(:maxPrice IS NULL OR p.price <= :maxPrice) AND " +
+                    "(:searchTerm IS NULL OR lower(p.name) LIKE lower(concat('%', :searchTerm, '%'))) AND " +
+                    "(:isNew IS NULL OR p.isNew = :isNew) AND " +
+                    "(:onSale IS NULL OR p.onSale = :onSale)")
     Page<Product> findWithFilters(
             @Param("categoryId") Long categoryId,
             @Param("minPrice") Double minPrice,
