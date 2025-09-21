@@ -12,12 +12,17 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Optional;
 
 @Service
 public class ProductService {
+
+    // ✅ FIX: Add the missing logger declaration
+    private static final Logger logger = LoggerFactory.getLogger(ProductService.class);
 
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
@@ -31,10 +36,22 @@ public class ProductService {
     }
 
     public Page<Product> getAllProducts(Long categoryId, Double minPrice, Double maxPrice, String searchTerm, Boolean isNew, Boolean onSale, Pageable pageable) {
-        return productRepository.findWithFilters(categoryId, minPrice, maxPrice, searchTerm, isNew, onSale, pageable);
+        try {
+            logger.info("Getting products with filters - categoryId: {}, minPrice: {}, maxPrice: {}, searchTerm: {}, isNew: {}, onSale: {}",
+                    categoryId, minPrice, maxPrice, searchTerm, isNew, onSale);
+
+            Page<Product> result = productRepository.findWithFilters(categoryId, minPrice, maxPrice, searchTerm, isNew, onSale, pageable);
+
+            logger.info("Found {} products out of {} total", result.getContent().size(), result.getTotalElements());
+
+            return result;
+
+        } catch (Exception e) {
+            logger.error("Error getting products with filters", e);
+            throw e; // Re-throw so the controller can handle it with fallback
+        }
     }
 
-    // ✅ This method now correctly calls the findAllForAdmin method that exists in the repository.
     public Page<Product> getAllProductsForAdmin(Pageable pageable) {
         return productRepository.findAllForAdmin(pageable);
     }
@@ -45,6 +62,18 @@ public class ProductService {
 
     public List<Product> getProductByCategory(Long categoryId) {
         return productRepository.findByCategoryId(categoryId);
+    }
+
+    public Page<Product> getAllProductsSimple(Pageable pageable) {
+        try {
+            logger.info("Using simple product query with pageable: {}", pageable);
+            Page<Product> result = productRepository.findAll(pageable);
+            logger.info("Simple query returned {} products", result.getContent().size());
+            return result;
+        } catch (Exception e) {
+            logger.error("Even simple query failed", e);
+            throw new RuntimeException("Database connection error", e);
+        }
     }
 
     public Product addProduct(ProductRequest productRequest) {

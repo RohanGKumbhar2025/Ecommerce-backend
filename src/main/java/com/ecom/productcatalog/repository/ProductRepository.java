@@ -17,13 +17,12 @@ import java.util.List;
 public interface ProductRepository extends JpaRepository<Product, Long> {
     List<Product> findByCategoryId(Long categoryId);
 
-    // ✅ FIX: Use @EntityGraph to solve the LazyInitializationException without breaking pagination.
-    @EntityGraph(attributePaths = { "category" })
-    @Query(value = "SELECT p FROM Product p WHERE " +
+    // ✅ FIXED: Simplified query without EntityGraph (add it back later if needed)
+    @Query(value = "SELECT p FROM Product p LEFT JOIN FETCH p.category WHERE " +
             "(:categoryId IS NULL OR p.category.id = :categoryId) AND " +
             "(:minPrice IS NULL OR p.price >= :minPrice) AND " +
             "(:maxPrice IS NULL OR p.price <= :maxPrice) AND " +
-            "(:searchTerm IS NULL OR lower(p.name) LIKE lower(concat('%', :searchTerm, '%'))) AND " +
+            "(:searchTerm IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :searchTerm, '%'))) AND " +
             "(:isNew IS NULL OR p.isNew = :isNew) AND " +
             "(:onSale IS NULL OR p.onSale = :onSale)")
     Page<Product> findWithFilters(
@@ -36,8 +35,19 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
             Pageable pageable
     );
 
-    // ✅ FIX: Also apply the EntityGraph to the admin query for consistency and to prevent future issues.
-    @EntityGraph(attributePaths = { "category" })
+    // ✅ ALTERNATIVE: Even simpler query without JOIN FETCH
+    @Query("SELECT p FROM Product p WHERE " +
+            "(:categoryId IS NULL OR p.category.id = :categoryId) AND " +
+            "(:minPrice IS NULL OR p.price >= :minPrice) AND " +
+            "(:maxPrice IS NULL OR p.price <= :maxPrice)")
+    Page<Product> findWithBasicFilters(
+            @Param("categoryId") Long categoryId,
+            @Param("minPrice") Double minPrice,
+            @Param("maxPrice") Double maxPrice,
+            Pageable pageable
+    );
+
+    // Keep the admin query simple too
     @Query("SELECT p FROM Product p")
     Page<Product> findAllForAdmin(Pageable pageable);
 }
