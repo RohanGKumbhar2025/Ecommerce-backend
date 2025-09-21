@@ -34,7 +34,7 @@ public class ProductService {
         return productRepository.findWithFilters(categoryId, minPrice, maxPrice, searchTerm, isNew, onSale, pageable);
     }
 
-    // ✅ ADDED: Service method for the admin controller.
+    // ✅ This method now correctly calls the findAllForAdmin method that exists in the repository.
     public Page<Product> getAllProductsForAdmin(Pageable pageable) {
         return productRepository.findAllForAdmin(pageable);
     }
@@ -82,7 +82,7 @@ public class ProductService {
         Optional.ofNullable(productRequest.getIsNew()).ifPresent(productToUpdate::setIsNew);
         Optional.ofNullable(productRequest.getOnSale()).ifPresent(productToUpdate::setOnSale);
 
-        if (productRequest.getCategoryId() != null && !productRequest.getCategoryId().equals(productToUpdate.getCategory().getId())) {
+        if (productRequest.getCategoryId() != null && !productToUpdate.getCategory().getId().equals(productRequest.getCategoryId())) {
             Category category = categoryRepository.findById(productRequest.getCategoryId())
                     .orElseThrow(() -> new EntityNotFoundException("Category not found with id: " + productRequest.getCategoryId()));
             productToUpdate.setCategory(category);

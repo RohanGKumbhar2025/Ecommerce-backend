@@ -14,22 +14,14 @@ import java.util.List;
 public interface ProductRepository extends JpaRepository<Product, Long> {
     List<Product> findByCategoryId(Long categoryId);
 
-    // ✅ FIX: This query is simplified to prevent the 500 Internal Server Error on Render.
-    // It removes 'JOIN FETCH' which can conflict with pagination and complex WHERE clauses.
+    // ✅ FIX: This query is now robust and compatible with production databases.
     @Query(value = "SELECT p FROM Product p WHERE " +
             "(:categoryId IS NULL OR p.category.id = :categoryId) AND " +
             "(:minPrice IS NULL OR p.price >= :minPrice) AND " +
             "(:maxPrice IS NULL OR p.price <= :maxPrice) AND " +
             "(:searchTerm IS NULL OR lower(p.name) LIKE lower(concat('%', :searchTerm, '%'))) AND " +
             "(:isNew IS NULL OR p.isNew = :isNew) AND " +
-            "(:onSale IS NULL OR p.onSale = :onSale)",
-            countQuery = "SELECT count(p) FROM Product p WHERE " +
-                    "(:categoryId IS NULL OR p.category.id = :categoryId) AND " +
-                    "(:minPrice IS NULL OR p.price >= :minPrice) AND " +
-                    "(:maxPrice IS NULL OR p.price <= :maxPrice) AND " +
-                    "(:searchTerm IS NULL OR lower(p.name) LIKE lower(concat('%', :searchTerm, '%'))) AND " +
-                    "(:isNew IS NULL OR p.isNew = :isNew) AND " +
-                    "(:onSale IS NULL OR p.onSale = :onSale)")
+            "(:onSale IS NULL OR p.onSale = :onSale)")
     Page<Product> findWithFilters(
             @Param("categoryId") Long categoryId,
             @Param("minPrice") Double minPrice,
@@ -39,4 +31,9 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
             @Param("onSale") Boolean onSale,
             Pageable pageable
     );
+
+    // ✅ ADDED BACK: A simple query for the admin panel that is compatible with pagination.
+    // This resolves the build error.
+    @Query("SELECT p FROM Product p")
+    Page<Product> findAllForAdmin(Pageable pageable);
 }
