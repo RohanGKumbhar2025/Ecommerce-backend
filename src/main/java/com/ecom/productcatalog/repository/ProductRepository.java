@@ -14,7 +14,8 @@ import java.util.List;
 public interface ProductRepository extends JpaRepository<Product, Long> {
     List<Product> findByCategoryId(Long categoryId);
 
-    // ✅ FIXED: Removed the non-portable CAST. Assumes the 'name' column is a text type (e.g., VARCHAR).
+    // ✅ FIX: Removed the non-standard CAST to prevent the 500 Internal Server Error.
+    // This query is now more robust and compatible with the production database.
     @Query(value = "SELECT p FROM Product p JOIN FETCH p.category WHERE " +
             "(:categoryId IS NULL OR p.category.id = :categoryId) AND " +
             "(:minPrice IS NULL OR p.price >= :minPrice) AND " +
@@ -38,9 +39,4 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
             @Param("onSale") Boolean onSale,
             Pageable pageable
     );
-
-    // ✅ ADDED: A simpler method for the admin panel to get all products.
-    @Query(value = "SELECT p FROM Product p JOIN FETCH p.category",
-            countQuery = "SELECT count(p) FROM Product p")
-    Page<Product> findAllForAdmin(Pageable pageable);
 }
