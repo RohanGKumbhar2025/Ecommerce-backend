@@ -20,8 +20,14 @@ public class Product {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // ✅ FIX: Explicitly define the column type as 'text'
+    @Column(columnDefinition = "text")
     private String name;
+
+    // ✅ FIX: Explicitly define the column type as 'text'
+    @Column(columnDefinition = "text")
     private String description;
+
     private String imageUrl;
     private Double price;
     private Boolean inStock;
