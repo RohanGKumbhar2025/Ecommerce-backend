@@ -62,7 +62,7 @@ public class SecurityConfig {
         // Also kept the one from your .env file and common development URLs.
         configuration.setAllowedOrigins(Arrays.asList(
                 frontendUrl,                          // The URL from your .env file
-                "https://nexoshoppingg.vercel.app",   // Your Vercel frontend URL
+                "https://nexoshoppingg.vercel.app/",   // Your Vercel frontend URL
                 "http://localhost:5173",              // Vite dev
                 "http://localhost:3000"               // React dev
         ));
