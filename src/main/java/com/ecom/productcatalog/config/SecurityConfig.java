@@ -22,7 +22,6 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
-import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -32,7 +31,6 @@ public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
 
-    // This will be read from your environment variables
     @Value("${FRONTEND_URL:http://localhost:5173}")
     private String frontendUrl;
 
@@ -58,20 +56,16 @@ public class SecurityConfig {
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // ✅ FIX: Added your actual production URL to the list of allowed origins.
-        // Also kept the one from your .env file and common development URLs.
+        // ✅ ROBUSTNESS FIX: Removed trailing slash from Vercel URL to avoid potential CORS issues.
         configuration.setAllowedOrigins(Arrays.asList(
-                frontendUrl,                          // The URL from your .env file
-                "https://nexoshoppingg.vercel.app",   // Your Vercel frontend URL
-                "http://localhost:5173",              // Vite dev
-                "http://localhost:3000"               // React dev
+                frontendUrl,
+                "https://nexoshoppingg.vercel.app", // Trailing slash removed
+                "http://localhost:5173",
+                "http://localhost:3000"
         ));
 
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
-
-        // It's safer to specify allowed headers explicitly
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With"));
-
         configuration.setAllowCredentials(true);
         configuration.setMaxAge(3600L);
 

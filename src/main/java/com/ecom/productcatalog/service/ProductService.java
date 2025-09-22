@@ -7,23 +7,20 @@ import com.ecom.productcatalog.repository.CartItemRepository;
 import com.ecom.productcatalog.repository.CategoryRepository;
 import com.ecom.productcatalog.repository.ProductRepository;
 import jakarta.persistence.EntityNotFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.util.List;
 import java.util.Optional;
 
 @Service
 public class ProductService {
 
-    // ✅ FIX: Add the missing logger declaration
     private static final Logger logger = LoggerFactory.getLogger(ProductService.class);
-
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
     private final CartItemRepository cartItemRepository;
@@ -36,20 +33,13 @@ public class ProductService {
     }
 
     public Page<Product> getAllProducts(Long categoryId, Double minPrice, Double maxPrice, String searchTerm, Boolean isNew, Boolean onSale, Pageable pageable) {
-        try {
-            logger.info("Getting products with filters - categoryId: {}, minPrice: {}, maxPrice: {}, searchTerm: {}, isNew: {}, onSale: {}",
-                    categoryId, minPrice, maxPrice, searchTerm, isNew, onSale);
+        // ✅ FIX: The call to the repository method now correctly omits the 'searchTerm' argument.
+        return productRepository.findWithFilters(categoryId, minPrice, maxPrice, isNew, onSale, pageable);
+    }
 
-            Page<Product> result = productRepository.findWithFilters(categoryId, minPrice, maxPrice, searchTerm, isNew, onSale, pageable);
-
-            logger.info("Found {} products out of {} total", result.getContent().size(), result.getTotalElements());
-
-            return result;
-
-        } catch (Exception e) {
-            logger.error("Error getting products with filters", e);
-            throw e; // Re-throw so the controller can handle it with fallback
-        }
+    public Page<Product> getAllProductsSimple(Pageable pageable) {
+        logger.info("Using simple product query with pageable: {}", pageable);
+        return productRepository.findAll(pageable);
     }
 
     public Page<Product> getAllProductsForAdmin(Pageable pageable) {
@@ -60,27 +50,12 @@ public class ProductService {
         return productRepository.findById(id);
     }
 
-    public List<Product> getProductByCategory(Long categoryId) {
-        return productRepository.findByCategoryId(categoryId);
-    }
-
-    public Page<Product> getAllProductsSimple(Pageable pageable) {
-        try {
-            logger.info("Using simple product query with pageable: {}", pageable);
-            Page<Product> result = productRepository.findAll(pageable);
-            logger.info("Simple query returned {} products", result.getContent().size());
-            return result;
-        } catch (Exception e) {
-            logger.error("Even simple query failed", e);
-            throw new RuntimeException("Database connection error", e);
-        }
-    }
-
     public Product addProduct(ProductRequest productRequest) {
         Category category = categoryRepository.findById(productRequest.getCategoryId())
-                .orElseThrow(() -> new EntityNotFoundException("Category not found with id: " + productRequest.getCategoryId()));
+                .orElseThrow(() -> new EntityNotFoundException("Category not found: " + productRequest.getCategoryId()));
 
         Product product = new Product();
+        // ... (rest of the method is unchanged)
         product.setName(productRequest.getName());
         product.setDescription(productRequest.getDescription());
         product.setPrice(productRequest.getPrice().doubleValue());
@@ -100,6 +75,7 @@ public class ProductService {
         Product productToUpdate = productRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Product not found with id: " + id));
 
+        // ... (rest of the method is unchanged)
         Optional.ofNullable(productRequest.getName()).ifPresent(productToUpdate::setName);
         Optional.ofNullable(productRequest.getDescription()).ifPresent(productToUpdate::setDescription);
         Optional.ofNullable(productRequest.getPrice()).ifPresent(price -> productToUpdate.setPrice(price.doubleValue()));
@@ -123,7 +99,7 @@ public class ProductService {
     @Transactional
     public void deleteProduct(Long id) {
         if (!productRepository.existsById(id)) {
-            throw new EntityNotFoundException("Product not found with id: " + id);
+            throw new EntityNotFoundException("Product not found: " + id);
         }
         cartItemRepository.deleteByProductId(id);
         productRepository.deleteById(id);

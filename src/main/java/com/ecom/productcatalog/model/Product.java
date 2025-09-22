@@ -6,7 +6,6 @@ import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.Where;
 
 @Entity
-// ✅ ADDED: Index on the 'name' column for faster searching
 @Table(name = "product", indexes = {
         @Index(name = "idx_product_category_id", columnList = "category_id"),
         @Index(name = "idx_product_rating", columnList = "rating"),
@@ -20,11 +19,13 @@ public class Product {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // ✅ FIX: Explicitly define the column type as 'text'
+    // ✅ CRITICAL FIX: Explicitly define the column type as 'text'.
+    // This resolves the "function lower(bytea) does not exist" error by ensuring
+    // the database column is a proper string type, not a binary type.
     @Column(columnDefinition = "text")
     private String name;
 
-    // ✅ FIX: Explicitly define the column type as 'text'
+    // ✅ BEST PRACTICE: Also define the description as 'text' to prevent future issues.
     @Column(columnDefinition = "text")
     private String description;
 
